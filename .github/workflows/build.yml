@@ -37,6 +37,10 @@ jobs:
         run: |
           set -euo pipefail
           pacman -Syu --noconfirm --needed git
+          # install this package's runtime deps as root, since makepkg runs
+          # unprivileged below and cannot do it itself
+          mapfile -t deps < <(source "${{ matrix.pkgname }}/PKGBUILD" 2>/dev/null; printf '%s\n' "${depends[@]}")
+          pacman -Syu --noconfirm --needed "${deps[@]}"
           # makepkg refuses to run as root, and containers start as root
           useradd -m builder
           chown -R builder "$GITHUB_WORKSPACE"
