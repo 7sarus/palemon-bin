@@ -42,7 +42,10 @@ jobs:
           mapfile -t deps < <(bash -c 'source "${{ matrix.pkgname }}/PKGBUILD" >/dev/null 2>&1; printf "%s\n" "${depends[@]}"')
           # makepkg refuses to run as root, and containers start as root
           useradd -m builder
+          # unprivileged makepkg shells out to sudo for -s / check deps
+          echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
           chown -R builder "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           # gtk2 was dropped from the official repos in Oct 2025 and is AUR-only,
           # so the gtk2 package needs it built from AUR first
           if printf '%s\n' "${deps[@]}" | grep -qx gtk2 && ! pacman -Si gtk2 >/dev/null 2>&1; then
@@ -50,7 +53,7 @@ jobs:
             git clone --depth 1 https://aur.archlinux.org/gtk2.git /tmp/gtk2-aur
             # install gtk2's own deps as root first: the unprivileged makepkg
             # below cannot use pacman -s to resolve them
-            mapfile -t g2deps < <(bash -c 'cd /tmp/gtk2-aur && source ./PKGBUILD >/dev/null 2>&1; printf "%s\n" "${depends[@]}"')
+            mapfile -t g2deps < <(bash -c 'cd /tmp/gtk2-aur && source ./PKGBUILD >/dev/null 2>&1; printf "%s\n" "${depends[@]}" "${makedepends[@]}"')
             echo "gtk2 AUR deps: ${g2deps[*]}"
             [ ${#g2deps[@]} -eq 0 ] || pacman -S --noconfirm --needed "${g2deps[@]}"
             chown -R builder /tmp/gtk2-aur
@@ -104,6 +107,7 @@ jobs:
 
       - name: Commit updated PKGBUILD
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add "${{ matrix.pkgname }}/PKGBUILD"
