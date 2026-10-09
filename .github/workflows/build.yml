@@ -40,18 +40,19 @@ jobs:
           # install this package's runtime deps as root, since makepkg runs
           # unprivileged below and cannot do it itself
           mapfile -t deps < <(source "${{ matrix.pkgname }}/PKGBUILD" 2>/dev/null; printf '%s\n' "${depends[@]}")
+          # makepkg refuses to run as root, and containers start as root
+          useradd -m builder
+          chown -R builder "$GITHUB_WORKSPACE"
           # gtk2 was dropped from the official repos in Oct 2025 and is AUR-only,
           # so the gtk2 package needs it built from AUR first
           if printf '%s\n' "${deps[@]}" | grep -qx gtk2 && ! pacman -Si gtk2 >/dev/null 2>&1; then
             echo "gtk2 not in official repos, building from AUR"
             git clone --depth 1 https://aur.archlinux.org/gtk2.git /tmp/gtk2-aur
-            makepkg -sCf --noprogressbar -C /tmp/gtk2-aur
+            chown -R builder /tmp/gtk2-aur
+            sudo -u builder makepkg -sCf --noprogressbar -C /tmp/gtk2-aur
             pacman -U --noconfirm /tmp/gtk2-aur/gtk2-*.pkg.tar.zst
           fi
           pacman -Syu --noconfirm --needed "${deps[@]}"
-          # makepkg refuses to run as root, and containers start as root
-          useradd -m builder
-          chown -R builder "$GITHUB_WORKSPACE"
 
       - name: Detect latest upstream version
         id: detect

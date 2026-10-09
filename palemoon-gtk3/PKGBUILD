@@ -60,7 +60,10 @@ package() {
   # gtk2 libmozgtk.so shipped alongside the GTK3 build
   install -Dm644 gtk2/libmozgtk.so "$pkgdir/usr/lib/palemoon/gtk2/libmozgtk.so"
 
-  install -dm644 *.dat "$pkgdir/usr/lib/palemoon/"
+  local dat
+  for dat in *.dat; do
+    install -Dm644 "$dat" "$pkgdir/usr/lib/palemoon/$dat"
+  done
 
   local dir
   for dir in browser chrome defaults dictionaries fonts icons; do

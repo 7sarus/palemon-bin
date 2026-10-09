@@ -55,7 +55,10 @@ package() {
   install -Dm644 license.txt "$pkgdir/usr/lib/palemoon/license.txt"
   install -Dm644 palemoon.res "$pkgdir/usr/lib/palemoon/palemoon.res"
 
-  install -dm644 *.dat "$pkgdir/usr/lib/palemoon/"
+  local dat
+  for dat in *.dat; do
+    install -Dm644 "$dat" "$pkgdir/usr/lib/palemoon/$dat"
+  done
 
   local dir
   for dir in browser chrome defaults dictionaries fonts icons; do
