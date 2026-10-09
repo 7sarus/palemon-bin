@@ -34,7 +34,12 @@ jobs:
           fetch-depth: 0
 
       - name: Install build tooling
-        run: pacman -Syu --noconfirm --needed git
+        run: |
+          set -euo pipefail
+          pacman -Syu --noconfirm --needed git
+          # makepkg refuses to run as root, and containers start as root
+          useradd -m builder
+          chown -R builder "$GITHUB_WORKSPACE"
 
       - name: Detect latest upstream version
         id: detect
@@ -53,22 +58,22 @@ jobs:
           UPSTREAM: ${{ steps.detect.outputs.version }}
         run: |
           set -euo pipefail
-          sed -i -E "s/^pkgver=.*/pkgver=${UPSTREAM}/; s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+          sudo -u builder sed -i -E "s/^pkgver=.*/pkgver=${UPSTREAM}/; s/^pkgrel=.*/pkgrel=1/" PKGBUILD
           # regenerate the sha256 list against the freshly downloaded source
-          makepkg -g --noprogressbar
-          echo "pkgver=$(makepkg --printsrcinfo | grep -oP '^pkgver = \K.*')" >> "$GITHUB_OUTPUT"
+          sudo -u builder makepkg -g --noprogressbar
           git --no-pager diff -- PKGBUILD || true
 
       - name: Build package
+        id: build
         working-directory: ${{ matrix.pkgname }}
         env:
-          MAKEFLAGS: "-j$(nproc)"
+          MAKEFLAGS: "-j2"
         run: |
           set -euo pipefail
-          makepkg -sf --noconfirm --noprogressbar
+          sudo -u builder makepkg -sf --noconfirm --noprogressbar
           pkg=$(ls -1 ./*.pkg.tar.zst)
           echo "asset=$(basename "$pkg")" >> "$GITHUB_OUTPUT"
-          sha256sum "$pkg" > "${pkg}.sig"
+          sudo -u builder sha256sum "$pkg" > "${pkg}.sig"
           echo "Building $pkg"
 
       - name: Upload artifact
@@ -95,7 +100,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: palemoon-${{ steps.detect.outputs.version }}
-          ASSET: ${{ steps.bump.outputs.asset }}
+          ASSET: ${{ steps.build.outputs.asset }}
         run: |
           set -euo pipefail
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
