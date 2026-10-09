@@ -10,7 +10,6 @@ depends=(
   'gtk3'
   'dbus-glib'
   'expat'
-  'gtk2'  # gtk2/libmozgtk.so shipped in the GTK3 tarball
   'libnotify'
   'libxss'
   'nspr'
@@ -19,13 +18,9 @@ depends=(
 optdepends=(
   'alsa-lib: ALSA support'
   'ffmpeg: H.264, AAC, mp3 format support'
-  'gtk2: Needed for flashplayer support'
+  'gtk2: Runtime for the bundled gtk2/libmozgtk.so (legacy plugin support)'
   'libpulse: PulseAudio audio support'
-  'libxcomposite: Needed for flashplayer support'
-  'libxdamage: Needed for flashplayer support'
-  'libxfixes: Needed for flashplayer support'
-  'libxtst: Needed for flashplayer support'
-  'libxrandr: Needed for flashplayer support'
+  'libxss: Needed for screen capture'
   'ttf-liberation: Larger fonts on some systems'
   'xdg-utils: Needed for opening links'
   'xorg-xrandr: Needed for --display option'
