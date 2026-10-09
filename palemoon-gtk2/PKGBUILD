@@ -61,7 +61,7 @@ package() {
   done
 
   local dir
-  for dir in browser chrome defaults dictionaries fonts icons; do
+  for dir in browser defaults dictionaries fonts icons; do
     cp -r "$dir" "$pkgdir/usr/lib/palemoon/"
   done
 

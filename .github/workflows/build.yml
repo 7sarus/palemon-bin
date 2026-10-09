@@ -49,7 +49,8 @@ jobs:
             echo "gtk2 not in official repos, building from AUR"
             git clone --depth 1 https://aur.archlinux.org/gtk2.git /tmp/gtk2-aur
             chown -R builder /tmp/gtk2-aur
-            sudo -u builder makepkg -sCf --noprogressbar -C /tmp/gtk2-aur
+            # makepkg has no -C: enter the dir in a subshell instead
+            sudo -u builder bash -c 'cd /tmp/gtk2-aur && makepkg -sCf --noprogressbar'
             pacman -U --noconfirm /tmp/gtk2-aur/gtk2-*.pkg.tar.zst
           fi
           pacman -Syu --noconfirm --needed "${deps[@]}"
