@@ -1,0 +1,108 @@
+name: Build packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Create a GitHub release with the built packages
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - 'palemoon-gtk2/**'
+      - 'palemoon-gtk3/**'
+      - '.github/workflows/build.yml'
+  schedule:
+    # weekly check for new upstream releases (Mon 04:23 UTC)
+    - cron: '23 4 * * 1'
+
+jobs:
+  build:
+    name: Build ${{ matrix.pkgname }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        pkgname: [palemoon-gtk3, palemoon-gtk2]
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build tooling
+        run: pacman -Syu --noconfirm --needed git
+
+      - name: Detect latest upstream version
+        id: detect
+        run: |
+          set -euo pipefail
+          latest=$(curl -sL https://www.palemoon.org/download.shtml \
+            | grep -oP 'Hashes for release \K[0-9.]+' | head -n1)
+          test -n "$latest" || { echo "::error::could not detect upstream version"; exit 1; }
+          echo "version=$latest" >> "$GITHUB_OUTPUT"
+          echo "Upstream latest: $latest"
+
+      - name: Sync PKGBUILD to upstream version
+        id: bump
+        working-directory: ${{ matrix.pkgname }}
+        env:
+          UPSTREAM: ${{ steps.detect.outputs.version }}
+        run: |
+          set -euo pipefail
+          sed -i -E "s/^pkgver=.*/pkgver=${UPSTREAM}/; s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+          # regenerate the sha256 list against the freshly downloaded source
+          makepkg -g --noprogressbar
+          echo "pkgver=$(makepkg --printsrcinfo | grep -oP '^pkgver = \K.*')" >> "$GITHUB_OUTPUT"
+          git --no-pager diff -- PKGBUILD || true
+
+      - name: Build package
+        working-directory: ${{ matrix.pkgname }}
+        env:
+          MAKEFLAGS: "-j$(nproc)"
+        run: |
+          set -euo pipefail
+          makepkg -sf --noconfirm --noprogressbar
+          pkg=$(ls -1 ./*.pkg.tar.zst)
+          echo "asset=$(basename "$pkg")" >> "$GITHUB_OUTPUT"
+          sha256sum "$pkg" > "${pkg}.sig"
+          echo "Building $pkg"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: palemoon-${{ matrix.pkgname }}
+          path: ${{ matrix.pkgname }}/*.pkg.tar.zst*
+
+      - name: Commit updated PKGBUILD
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "${{ matrix.pkgname }}/PKGBUILD"
+          if git diff --cached --quiet; then
+            echo "PKGBUILD already up to date"
+          else
+            git commit -m "chore(${{ matrix.pkgname }}): update to ${{ steps.detect.outputs.version }}"
+            git push
+          fi
+
+      - name: Publish release
+        if: github.event_name == 'workflow_dispatch' && inputs.publish
+        working-directory: ${{ matrix.pkgname }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: palemoon-${{ steps.detect.outputs.version }}
+          ASSET: ${{ steps.bump.outputs.asset }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ASSET" "$ASSET.sig" \
+              --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \
+              --title "Pale Moon ${{ steps.detect.outputs.version }}" --generate-notes \
+              "$ASSET" "$ASSET.sig"
+          fi

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Name=Pale Moon (bin)
+GenericName=Web Browser
+Comment=Fast and highly configurable web browser with low system resource usage (no-bin wrapper)
+Exec=palemoon-bin %u
+Terminal=false
+Type=Application
+Icon=palemoon
+StartupWMClass=Pale Moon
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml+xml;application/vnd.mozilla.xul+xml;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/ftp;

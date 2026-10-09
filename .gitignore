@@ -1,0 +1,6 @@
+*.pkg.tar.*
+*.pkg.tar.zst.sig
+src/
+pkg/
+*.log
+.DS_Store

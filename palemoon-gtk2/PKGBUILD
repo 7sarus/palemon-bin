@@ -1,0 +1,80 @@
+# Maintainer: 7sarus
+pkgname=palemoon-gtk2
+pkgver=35.0.2
+pkgrel=1
+pkgdesc="Open source browser based on Firefox codebase, GTK2 build (legacy)"
+arch=('x86_64')
+url="https://www.palemoon.org/"
+license=('MPL2.0')
+depends=(
+  'gtk2'
+  'dbus-glib'
+  'expat'
+  'libnotify'
+  'libxss'
+  'nspr'
+  'pango'
+)
+optdepends=(
+  'alsa-lib: ALSA support'
+  'ffmpeg: H.264, AAC, mp3 format support'
+  'libpulse: PulseAudio audio support'
+  'libxcomposite: Needed for flashplayer support'
+  'libxdamage: Needed for flashplayer support'
+  'libxfixes: Needed for flashplayer support'
+  'libxtst: Needed for flashplayer support'
+  'libxrandr: Needed for flashplayer support'
+  'ttf-liberation: Larger fonts on some systems'
+  'xdg-utils: Needed for opening links'
+  'xorg-xrandr: Needed for --display option'
+)
+provides=('palemoon')
+conflicts=('palemoon' 'palemoon-gtk3')
+replaces=('palemoon')
+backup=(browser/defaults/profile/user.js)
+source=("palemoon-$pkgver.linux-x86_64-gtk2.tar.xz::https://www.palemoon.org/download.php?mirror=us&bits=64&type=linuxgtk2")
+sha256sums=('a70e0f0517f99021790d6c42378d022bafac1fc1c22d02910bf8e3f619ffc0cd')
+
+package() {
+  cd "$srcdir/palemoon"
+  install -Dm755 palemoon "$pkgdir/usr/lib/palemoon/palemoon"
+  install -Dm755 palemoon-bin "$pkgdir/usr/lib/palemoon/palemoon-bin"
+  install -Dm755 plugin-container "$pkgdir/usr/lib/palemoon/plugin-container"
+  install -Dm755 run-mozilla.sh "$pkgdir/usr/lib/palemoon/run-mozilla.sh"
+  install -Dm644 updater "$pkgdir/usr/lib/palemoon/updater"
+  install -Dm644 updater.ini "$pkgdir/usr/lib/palemoon/updater.ini"
+
+  # shared libraries and data files
+  local lib
+  for lib in *.so; do
+    install -Dm644 "$lib" "$pkgdir/usr/lib/palemoon/$lib"
+  done
+
+  install -Dm644 application.ini "$pkgdir/usr/lib/palemoon/application.ini"
+  install -Dm644 platform.ini "$pkgdir/usr/lib/palemoon/platform.ini"
+  install -Dm644 chrome.manifest "$pkgdir/usr/lib/palemoon/chrome.manifest"
+  install -Dm644 precomplete "$pkgdir/usr/lib/palemoon/precomplete"
+  install -Dm644 update-settings.ini "$pkgdir/usr/lib/palemoon/update-settings.ini"
+  install -Dm644 dependentlibs.list "$pkgdir/usr/lib/palemoon/dependentlibs.list"
+  install -Dm644 removed-files "$pkgdir/usr/lib/palemoon/removed-files"
+  install -Dm644 license.txt "$pkgdir/usr/lib/palemoon/license.txt"
+  install -Dm644 palemoon.res "$pkgdir/usr/lib/palemoon/palemoon.res"
+
+  install -dm644 *.dat "$pkgdir/usr/lib/palemoon/"
+
+  local dir
+  for dir in browser chrome defaults dictionaries fonts icons; do
+    cp -r "$dir" "$pkgdir/usr/lib/palemoon/"
+  done
+
+  install -Dm644 "$srcdir/palemoon.desktop" "$pkgdir/usr/share/applications/palemoon.desktop"
+  install -Dm644 "$srcdir/palemoon-bin.desktop" "$pkgdir/usr/share/applications/palemoon-bin.desktop"
+
+  install -Dm644 browser/icons/mozicon128.png "$pkgdir/usr/share/icons/hicolor/128x128/apps/palemoon.png"
+  install -Dm644 browser/chrome/icons/default/default32.png "$pkgdir/usr/share/icons/hicolor/32x32/apps/palemoon.png"
+  install -Dm644 browser/chrome/icons/default/default16.png "$pkgdir/usr/share/icons/hicolor/16x16/apps/palemoon.png"
+  install -Dm644 icons/updater.png "$pkgdir/usr/share/icons/hicolor/32x32/apps/palemoon-updater.png"
+  install -Dm644 browser/chrome/icons/default/default48.png "$pkgdir/usr/share/icons/hicolor/scalable/apps/palemoon.png"
+
+  install -Dm755 "$srcdir/palemoon.sh" "$pkgdir/usr/bin/palemoon"
+}
