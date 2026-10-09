@@ -59,7 +59,9 @@ jobs:
             chown -R builder /tmp/gtk2-aur
             # makepkg has no -C: enter the dir in a subshell instead
             sudo -u builder bash -c 'cd /tmp/gtk2-aur && makepkg -sCf --noprogressbar'
-            pacman -U --noconfirm /tmp/gtk2-aur/gtk2-*.pkg.tar.zst
+            g2pkg=$(find /tmp/gtk2-aur -maxdepth 1 -name 'gtk2-*.pkg.tar.zst' ! -name '*-debug-*' -print -quit)
+            echo "AUR gtk2 package: ${g2pkg:-NOT FOUND}"
+            test -n "$g2pkg" && pacman -U --noconfirm "$g2pkg"
           fi
           pacman -Syu --noconfirm --needed "${deps[@]}"
 
@@ -107,15 +109,20 @@ jobs:
 
       - name: Commit updated PKGBUILD
         run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add "${{ matrix.pkgname }}/PKGBUILD"
-          if git diff --cached --quiet; then
+          run: |
+          set -uo pipefail
+          repo="$GITHUB_WORKSPACE"
+          git -C "$repo" config --global --add safe.directory '*'
+          git -C "$repo" config user.name github-actions[bot]
+          git -C "$repo" config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git -C "$repo" add "${{ matrix.pkgname }}/PKGBUILD"
+          if git -C "$repo" diff --cached --quiet; then
             echo "PKGBUILD already up to date"
           else
-            git commit -m "chore(${{ matrix.pkgname }}): update to ${{ steps.detect.outputs.version }}"
-            git push
+            git -C "$repo" commit -m "chore(${{ matrix.pkgname }}): update to ${{ steps.detect.outputs.version }}"
+            # never fail the build on a concurrent-push race; the next run retries
+            git -C "$repo" pull --rebase --autostash origin main || true
+            git -C "$repo" push || echo "::warning::push failed, will retry on next run"
           fi
 
       - name: Publish release
