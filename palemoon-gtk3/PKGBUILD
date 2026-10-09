@@ -28,7 +28,7 @@ optdepends=(
 provides=('palemoon')
 conflicts=('palemoon' 'palemoon-gtk2')
 replaces=('palemoon')
-backup=(browser/defaults/profile/user.js)
+# user.js does not ship in the tarball; kept empty to avoid the backup warning
 source=("palemoon-$pkgver.linux-x86_64-gtk3.tar.xz::https://www.palemoon.org/download.php?mirror=us&bits=64&type=linuxgtk3")
 sha256sums=('3136ee8ecde1c1f865d45c3f5015f07e27e590ae0b43c22f1811f65633547adb')
 
