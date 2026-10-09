@@ -71,8 +71,8 @@ package() {
   done
 
   # desktop entry
-  install -Dm644 "$srcdir/palemoon.desktop" "$pkgdir/usr/share/applications/palemoon.desktop"
-  install -Dm644 "$srcdir/palemoon-bin.desktop" "$pkgdir/usr/share/applications/palemoon-bin.desktop"
+  install -Dm644 "$startdir/palemoon.desktop" "$pkgdir/usr/share/applications/palemoon.desktop"
+  install -Dm644 "$startdir/palemoon-bin.desktop" "$pkgdir/usr/share/applications/palemoon-bin.desktop"
 
   # icons
   install -Dm644 browser/icons/mozicon128.png "$pkgdir/usr/share/icons/hicolor/128x128/apps/palemoon.png"
@@ -82,5 +82,5 @@ package() {
   install -Dm644 browser/chrome/icons/default/default48.png "$pkgdir/usr/share/icons/hicolor/scalable/apps/palemoon.png"
 
   # launcher script
-  install -Dm755 "$srcdir/palemoon.sh" "$pkgdir/usr/bin/palemoon"
+  install -Dm755 "$startdir/palemoon.sh" "$pkgdir/usr/bin/palemoon"
 }

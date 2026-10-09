@@ -48,6 +48,10 @@ jobs:
           if printf '%s\n' "${deps[@]}" | grep -qx gtk2 && ! pacman -Si gtk2 >/dev/null 2>&1; then
             echo "gtk2 not in official repos, building from AUR"
             git clone --depth 1 https://aur.archlinux.org/gtk2.git /tmp/gtk2-aur
+            # install gtk2's own deps as root first: the unprivileged makepkg
+            # below cannot use pacman -s to resolve them
+            mapfile -t g2deps < <(cd /tmp/gtk2-aur && source PKGBUILD 2>/dev/null; printf '%s\n' "${depends[@]}")
+            pacman -S --noconfirm --needed "${g2deps[@]}"
             chown -R builder /tmp/gtk2-aur
             # makepkg has no -C: enter the dir in a subshell instead
             sudo -u builder bash -c 'cd /tmp/gtk2-aur && makepkg -sCf --noprogressbar'

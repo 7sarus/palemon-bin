@@ -33,7 +33,6 @@ sha256sums=('a70e0f0517f99021790d6c42378d022bafac1fc1c22d02910bf8e3f619ffc0cd')
 package() {
   cd "$srcdir/palemoon"
   install -Dm755 palemoon "$pkgdir/usr/lib/palemoon/palemoon"
-  install -Dm755 palemoon-bin "$pkgdir/usr/lib/palemoon/palemoon-bin"
   install -Dm755 plugin-container "$pkgdir/usr/lib/palemoon/plugin-container"
   install -Dm755 run-mozilla.sh "$pkgdir/usr/lib/palemoon/run-mozilla.sh"
   install -Dm644 updater "$pkgdir/usr/lib/palemoon/updater"
@@ -65,8 +64,8 @@ package() {
     cp -r "$dir" "$pkgdir/usr/lib/palemoon/"
   done
 
-  install -Dm644 "$srcdir/palemoon.desktop" "$pkgdir/usr/share/applications/palemoon.desktop"
-  install -Dm644 "$srcdir/palemoon-bin.desktop" "$pkgdir/usr/share/applications/palemoon-bin.desktop"
+  install -Dm644 "$startdir/palemoon.desktop" "$pkgdir/usr/share/applications/palemoon.desktop"
+  install -Dm644 "$startdir/palemoon-bin.desktop" "$pkgdir/usr/share/applications/palemoon-bin.desktop"
 
   install -Dm644 browser/icons/mozicon128.png "$pkgdir/usr/share/icons/hicolor/128x128/apps/palemoon.png"
   install -Dm644 browser/chrome/icons/default/default32.png "$pkgdir/usr/share/icons/hicolor/32x32/apps/palemoon.png"
@@ -74,5 +73,5 @@ package() {
   install -Dm644 icons/updater.png "$pkgdir/usr/share/icons/hicolor/32x32/apps/palemoon-updater.png"
   install -Dm644 browser/chrome/icons/default/default48.png "$pkgdir/usr/share/icons/hicolor/scalable/apps/palemoon.png"
 
-  install -Dm755 "$srcdir/palemoon.sh" "$pkgdir/usr/bin/palemoon"
+  install -Dm755 "$startdir/palemoon.sh" "$pkgdir/usr/bin/palemoon"
 }
