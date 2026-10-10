@@ -134,15 +134,17 @@ jobs:
         working-directory: ${{ matrix.pkgname }}
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: palemoon-${{ steps.detect.outputs.version }}
           ASSET: ${{ steps.build.outputs.asset }}
         run: |
           set -euo pipefail
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          TAG="palemoon-${{ steps.detect.outputs.version }}-${COMMIT_COUNT}-${COMMIT_HASH}"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" "$ASSET" "$ASSET.sig" \
               --repo "$GITHUB_REPOSITORY" --clobber
           else
             gh release create "$TAG" --repo "$GITHUB_REPOSITORY" \
-              --title "Pale Moon ${{ steps.detect.outputs.version }}" --generate-notes \
+              --title "Pale Moon ${{ steps.detect.outputs.version }} (Commit $COMMIT_COUNT)" --generate-notes \
               "$ASSET" "$ASSET.sig"
           fi
