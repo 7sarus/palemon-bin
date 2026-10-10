@@ -109,7 +109,6 @@ jobs:
 
       - name: Commit updated PKGBUILD
         run: |
-          run: |
           set -uo pipefail
           repo="$GITHUB_WORKSPACE"
           git -C "$repo" config --global --add safe.directory '*'
