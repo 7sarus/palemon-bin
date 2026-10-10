@@ -39,7 +39,7 @@ jobs:
       - name: Install build tooling
         run: |
           set -euo pipefail
-          pacman -Syu --noconfirm --needed git base-devel
+          pacman -Syu --noconfirm --needed git base-devel github-cli
           # install this package's runtime deps as root, since makepkg runs
           # unprivileged below and cannot do it itself
           mapfile -t deps < <(bash -c 'source "${{ matrix.pkgname }}/PKGBUILD" >/dev/null 2>&1; printf "%s\n" "${depends[@]}"')
