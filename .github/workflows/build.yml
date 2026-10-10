@@ -121,7 +121,7 @@ jobs:
             git -C "$repo" commit -m "chore(${{ matrix.pkgname }}): update to ${{ steps.detect.outputs.version }}"
             # never fail the build on a concurrent-push race; the next run retries
             git -C "$repo" pull --rebase --autostash origin main || true
-            git -C "$repo" push || echo "::warning::push failed, will retry on next run"
+            git -C "$repo" push origin HEAD:main || echo "::warning::push failed, will retry on next run"
           fi
 
       - name: Publish release
