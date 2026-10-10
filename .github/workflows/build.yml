@@ -63,7 +63,9 @@ jobs:
             echo "AUR gtk2 package: ${g2pkg:-NOT FOUND}"
             test -n "$g2pkg" && pacman -U --noconfirm "$g2pkg"
           fi
-          pacman -Syu --noconfirm --needed "${deps[@]}"
+          declare -a repo_deps=()
+          for d in "${deps[@]}"; do [ "$d" = "gtk2" ] || repo_deps+=("$d"); done
+          [ ${#repo_deps[@]} -eq 0 ] || pacman -Syu --noconfirm --needed "${repo_deps[@]}"
 
       - name: Detect latest upstream version
         id: detect
