@@ -29,6 +29,9 @@ jobs:
         pkgname: [palemoon-gtk3, palemoon-gtk2]
     container: archlinux:base-devel
     steps:
+      - name: Install git for checkout
+        run: pacman -Sy --noconfirm git
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
